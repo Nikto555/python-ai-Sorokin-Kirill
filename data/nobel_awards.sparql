@@ -1,0 +1,41 @@
+# Данные о награждениях Нобелевской премией.
+# Data about Nobel Prize awards.
+
+SELECT DISTINCT
+  ?recipient
+  ?recipientLabel
+  ?recipientType
+  ?prize
+  ?prizeLabel
+  ?awardDate
+  (YEAR(?awardDate) AS ?awardYear)
+  ?countryLabel
+WHERE {
+  VALUES ?prize {
+    wd:Q38104   # Nobel Prize in Physics
+    wd:Q44585   # Nobel Prize in Chemistry
+    wd:Q80061   # Nobel Prize in Physiology or Medicine
+    wd:Q37922   # Nobel Prize in Literature
+    wd:Q47170   # Nobel Peace Prize
+    wd:Q80068   # Nobel Memorial Prize in Economic Sciences
+  }
+
+  ?recipient p:P166 ?awardStatement.
+  ?awardStatement ps:P166 ?prize.
+  OPTIONAL { ?awardStatement pq:P585 ?awardDate. }
+
+  BIND(
+    IF(EXISTS { ?recipient wdt:P31 wd:Q5 }, "person", "organization")
+    AS ?recipientType
+  )
+
+  OPTIONAL { ?recipient wdt:P27 ?citizenship. }
+  OPTIONAL { ?recipient wdt:P17 ?organizationCountry. }
+
+  BIND(COALESCE(?citizenship, ?organizationCountry) AS ?country)
+
+  SERVICE wikibase:label {
+    bd:serviceParam wikibase:language "ru,en".
+  }
+}
+ORDER BY ?awardYear ?prizeLabel ?recipientLabel
